@@ -11,9 +11,7 @@ show_rejected = True
 camera_id = 0
 video_file = ""  # Leave blank to use webcam
 
-# Load camera calibration if you have it
-cam_matrix = np.eye(3, dtype=np.float32)  # Placeholder: load real calibration!
-dist_coeffs = np.zeros((5, 1), dtype=np.float32)
+
 
 # Setup dictionary and detector
 dictionary = aruco.getPredefinedDictionary(dictionary_id)
