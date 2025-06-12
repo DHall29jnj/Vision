@@ -1,0 +1,131 @@
+import cv2
+import cv2.aruco as aruco
+import numpy as np
+
+# Camera calibration parameters (replace with your values)
+cam_matrix = np.array([[800, 0, 320],
+                           [0, 800, 240],
+                           [0, 0, 1]], dtype=np.float32)
+
+dist_coeffs = np.array([-0.3, 0.12, 0.001, 0.002, 0.0], dtype=np.float32)
+
+# Printed ARuco dimensions
+marker_size = 0.2  # In meters
+
+# Pointer offset (3D vector from marker center to pointer tip)
+# You need to determine this through calibration (e.g., by touching known points)
+pointer_offset = np.array([0, 0, 23.008], dtype=np.float32) # Example: 10cm along the marker's Z-axis
+
+# Parameters
+dictionary_id = aruco.DICT_6X6_250
+estimated_pose = True
+show_rejected = False
+camera_id = 0
+video_file = "" #Leave blank to use the webcam
+
+# Setup dictionary and detector
+dictionary = aruco.getPredefinedDictionary(dictionary_id)
+detector_params = aruco.DetectorParameters()
+detector = aruco.ArucoDetector(dictionary, detector_params)
+
+# Setup video input
+cap = cv2.VideoCapture(video_file if video_file else camera_id)
+
+if not cap.isOpened():
+    print("Error: Could not open video source.")
+    exit()
+
+wait_time = 1 # milliseconds; 1 allows real-time behavior
+
+# Define object points for a square planar ArUco marker (z=0)
+obj_points = np.array([
+    [-marker_size/2,  marker_size/2, 0],
+    [ marker_size/2,  marker_size/2, 0],
+    [ marker_size/2, -marker_size/2, 0],
+    [-marker_size/2, -marker_size/2, 0]
+], dtype=np.float32)
+
+# File to save pointer coordinates
+output_file = "pointer_coordinates.txt"
+
+# Store pose data
+pointer_poses = []
+
+while True:
+    ret, image = cap.read()
+    if not ret:
+        print("Error: Failed to read frame.")
+        break
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Detect markers
+    corners, ids, rejected = detector.detectMarkers(gray)
+
+    if ids is not None:
+        pointer_rvec = None
+        pointer_tvec = None
+        reference_rvec = None
+        reference_tvec = None
+
+        for i in range(len(ids)):
+            # Assuming marker ID 23 is the pointer marker and ID 62 is the reference marker
+            if ids[i] == 23:
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+                if ret:
+                    pointer_rvec = rvec
+                    pointer_tvec = tvec
+                    # Draw axes for pointer marker
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
+            elif ids[i] == 62:
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+                if ret:
+                    reference_rvec = rvec
+                    reference_tvec = tvec
+                    # Draw axes for reference marker
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size * 2) # Larger axes for ref marker
+
+        if pointer_rvec is not None and reference_rvec is not None:
+            # Calculate pointer tip position in camera frame
+            pointer_tip_camera_frame = cv2.Rodrigues(pointer_rvec)[0] @ pointer_offset + pointer_tvec
+
+            # Calculate transformation from camera frame to reference frame
+            # This is the inverse of the transformation from reference frame to camera frame
+            R_ref_to_cam, _ = cv2.Rodrigues(reference_rvec)
+            t_ref_to_cam = reference_tvec
+
+            R_cam_to_ref = R_ref_to_cam.T # Transpose of rotation matrix is its inverse
+            t_cam_to_ref = -R_cam_to_ref @ t_ref_to_cam
+
+            # Transform pointer tip position from camera frame to reference frame
+            pointer_tip_reference_frame = R_cam_to_ref @ pointer_tip_camera_frame + t_cam_to_ref
+
+            # Save the coordinates
+            with open(output_file, "a") as f:
+                f.write(f"{pointer_tip_reference_frame[0,0]} {pointer_tip_reference_frame[1,0]} {pointer_tip_reference_frame[2,0]}\n")
+            
+            # Print the coordinates (optional)
+            print(f"Pointer tip in reference frame: {pointer_tip_reference_frame}")
+
+            # Draw the pointer tip position on the image (optional)
+            # You'll need to project the 3D pointer tip position in the reference frame
+            # back to the 2D image plane to draw it.
+            # This requires transforming the pointer tip from reference frame to camera frame
+            # and then using cv2.projectPoints
+            pointer_tip_camera_frame_again = R_ref_to_cam @ pointer_tip_reference_frame + t_ref_to_cam
+            img_points, _ = cv2.projectPoints(pointer_tip_camera_frame_again, np.zeros((3,1)), np.zeros((3,1)), cam_matrix, dist_coeffs)
+            if img_points is not None:
+                cv2.circle(image, (int(img_points[0][0][0]), int(img_points[0][0][1])), 5, (0, 255, 0), -1) # Green circle
+
+        aruco.drawDetectedMarkers(image, corners, ids) # Draw detected markers and their IDs
+
+    # Display the image
+    cv2.imshow("ArUco Pointer Tracking", image)
+
+    # Exit on keypress 'q'
+    if cv2.waitKey(wait_time) & 0xFF == ord('q'):
+        break
+
+# Release the video capture object and destroy all windows
+cap.release()
+cv2.destroyAllWindows()
