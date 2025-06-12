@@ -50,7 +50,7 @@ if __name__ == "__main__":
             break
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        
+
         # Detect markers
         corners, ids, rejected = detector.detectMarkers(gray)
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size) # Draw the axes
 
         # Display the image
-        cv2.imshow("ArUco Pose Estimation", image)
+        cv2.imshow("ArUco Pose", image)
 
         # Exit on keypress 'q'
         if cv2.waitKey(wait_time) & 0xFF == ord('q'):
