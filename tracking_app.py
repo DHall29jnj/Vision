@@ -14,7 +14,7 @@ marker_size = 0.2  # In meters
 
 # Pointer offset (3D vector from marker center to pointer tip)
 # You need to determine this through calibration (e.g., by touching known points)
-pointer_offset = np.array([0, 0, 23.008], dtype=np.float32) # Example: 10cm along the marker's Z-axis
+pointer_offset = np.array([0, 0, 0.1], dtype=np.float32) # Example: 10cm along the marker's Z-axis
 
 # Parameters
 dictionary_id = aruco.DICT_6X6_250
@@ -48,6 +48,17 @@ obj_points = np.array([
 # File to save pointer coordinates
 output_file = "pointer_coordinates.txt"
 
+#List all tracked pointer positions 2D
+tracked_points = []
+_, frame = cap.read() #read one frame to get image dimensions
+trajectory_canvas = np.zeros_like(frame)
+
+previous_pointer_pos_img = None
+
+previous_filtered_pos = None
+
+ema_alpha = 0.1
+
 # Store pose data
 pointer_poses = []
 
@@ -61,6 +72,8 @@ while True:
 
     # Detect markers
     corners, ids, rejected = detector.detectMarkers(gray)
+
+    current_pointer_pos_img = None
 
     if ids is not None:
         pointer_rvec = None
@@ -87,7 +100,7 @@ while True:
 
         if pointer_rvec is not None and reference_rvec is not None:
             # Calculate pointer tip position in camera frame
-            pointer_tip_camera_frame = cv2.Rodrigues(pointer_rvec)[0] @ pointer_offset + pointer_tvec
+            pointer_tip_camera_frame = cv2.Rodrigues(pointer_rvec) [0] @ pointer_offset + pointer_tvec
 
             # Calculate transformation from camera frame to reference frame
             # This is the inverse of the transformation from reference frame to camera frame
@@ -107,20 +120,40 @@ while True:
             # Print the coordinates (optional)
             print(f"Pointer tip in reference frame: {pointer_tip_reference_frame}")
 
-            # Draw the pointer tip position on the image (optional)
-            # You'll need to project the 3D pointer tip position in the reference frame
-            # back to the 2D image plane to draw it.
-            # This requires transforming the pointer tip from reference frame to camera frame
-            # and then using cv2.projectPoints
-            pointer_tip_camera_frame_again = R_ref_to_cam @ pointer_tip_reference_frame + t_ref_to_cam
-            img_points, _ = cv2.projectPoints(pointer_tip_camera_frame_again, np.zeros((3,1)), np.zeros((3,1)), cam_matrix, dist_coeffs)
+            # Project pointer tip position in camera frame to 2D image plane
+            img_points, _ = cv2.projectPoints(pointer_tip_camera_frame, np.zeros((3,1)), np.zeros((3,1)), cam_matrix, dist_coeffs)
             if img_points is not None:
-                cv2.circle(image, (int(img_points[0][0][0]), int(img_points[0][0][1])), 5, (0, 255, 0), -1) # Green circle
+                current_pointer_pos_img = (int(img_points[0][0][0]), int(img_points[0][0][1]))
+
+
+                # Apply EMA filter to the current position
+                if previous_filtered_pos is None:
+                    # Initialize the filter with the first position
+                    previous_filtered_pos = current_pointer_pos_img
+                else:
+                    # Apply the EMA formula
+                    filtered_x = ema_alpha * current_pointer_pos_img[0] + (1 - ema_alpha) * previous_filtered_pos[0]
+                    filtered_y = ema_alpha * current_pointer_pos_img[1] + (1 - ema_alpha) * previous_filtered_pos[1]
+                    current_pointer_pos_img = (int(filtered_x), int(filtered_y))
+                    previous_filtered_pos = current_pointer_pos_img # Update the previous filtered position
+
+                
+                #Append the current position to the list of points
+                tracked_points.append(current_pointer_pos_img)
+                if len(tracked_points) > 1:
+                    pts = np.array(tracked_points, np.int32).reshape((-1, 1, 2))
+                    cv2.polylines(trajectory_canvas, [pts], False, (0, 0, 255), 2)
+
+                # Draw a circle at the current pointer tip position
+                cv2.circle(trajectory_canvas, current_pointer_pos_img, 5, (0, 255, 0), -1) # Green circle
 
         aruco.drawDetectedMarkers(image, corners, ids) # Draw detected markers and their IDs
 
+    #Overlay the trajectory canvas onto the image
+    combined_image = cv2.addWeighted(image, 1, trajectory_canvas, 1, 0)
+
     # Display the image
-    cv2.imshow("ArUco Pointer Tracking", image)
+    cv2.imshow("ArUco Pointer Tracking", combined_image)
 
     # Exit on keypress 'q'
     if cv2.waitKey(wait_time) & 0xFF == ord('q'):
