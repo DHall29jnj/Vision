@@ -33,7 +33,7 @@ if __name__ == "__main__":
         print("Error: Could not open video source.")
         exit()
 
-    wait_time = 1  # milliseconds; 1 allows real-time behavior
+    wait_time = 1 # milliseconds; 1 allows real-time behavior
 
     # Define object points for a square planar ArUco marker (z=0)
     obj_points = np.array([
@@ -50,69 +50,32 @@ if __name__ == "__main__":
             break
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
+        
         # Detect markers
         corners, ids, rejected = detector.detectMarkers(gray)
 
         if ids is not None:
-            # Estimate pose
-            rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, marker_size, cam_matrix, dist_coeffs)
-
+            rvecs = []
+            tvecs = []
             for i in range(len(ids)):
-                # Draw detected marker and axes
-                aruco.drawDetectedMarkers(image, corners, ids)
-                aruco.drawAxis(image, cam_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.05)
+                # Estimate pose using solvePnP
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
 
-                # Optional: Put text near each marker
-                c = corners[i][0]
-                x = int(c[:, 0].mean())
-                y = int(c[:, 1].mean())
-                cv2.putText(image, f"ID: {ids[i][0]}", (x, y), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                if ret: # Check if solvePnP was successful
+                    rvecs.append(rvec)
+                    tvecs.append(tvec)
 
-        # Show output
-        cv2.imshow("ArUco Pose", image)
+                    # Draw detected marker and axes
+                    aruco.drawDetectedMarkers(image, corners) # Draw the detected markers
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size) # Draw the axes
 
-        # Exit on ESC or 'q'
-        key = cv2.waitKey(wait_time)
-        if key == 27 or key == ord('q'):
+        # Display the image
+        cv2.imshow("ArUco Pose Estimation", image)
+
+        # Exit on keypress 'q'
+        if cv2.waitKey(wait_time) & 0xFF == ord('q'):
             break
 
+    # Release the video capture object and destroy all windows
     cap.release()
     cv2.destroyAllWindows()
-    
-    #     # Estimate pose
-    #     rvecs, tvecs = [], []
-    #     if estimate_pose and ids is not None:
-    #         for c in corners:
-    #             retval, rvec, tvec = cv2.solvePnP(obj_points, c, cam_matrix, dist_coeffs)
-    #             rvecs.append(rvec)
-    #             tvecs.append(tvec)
-
-    #     # Time stats
-    #     elapsed = (cv2.getTickCount() - start_tick) / cv2.getTickFrequency()
-    #     total_time += elapsed
-    #     total_iterations += 1
-
-    #     if total_iterations % 30 == 0:
-    #         print(f"Detection Time = {elapsed * 1000:.2f} ms "
-    #             f"(Mean = {1000 * total_time / total_iterations:.2f} ms)")
-
-    #     # Draw output
-    #     image_copy = image.copy()
-    #     if ids is not None:
-    #         aruco.drawDetectedMarkers(image_copy, corners, ids)
-    #         if estimate_pose:
-    #             for i in range(len(ids)):
-    #                 cv2.drawFrameAxes(image_copy, cam_matrix, dist_coeffs,
-    #                                 rvecs[i], tvecs[i], marker_size * 1.5, 2)
-
-    #     if show_rejected and rejected is not None:
-    #         aruco.drawDetectedMarkers(image_copy, rejected, borderColor=(100, 0, 255))
-
-    #     cv2.imshow("out", image_copy)
-    #     if cv2.waitKey(wait_time) == 27:  # Esc key to exit
-    #         break
-
-    # cap.release()
-    # cv2.destroyAllWindows()
