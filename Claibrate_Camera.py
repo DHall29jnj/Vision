@@ -1,59 +1,71 @@
+import cv2
 import numpy as np
-import cv2 as cv
-import glob
- 
-# termination criteria
-criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
- 
-# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((6*7,3), np.float32)
-objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
- 
-# Arrays to store object points and image points from all the images.
+import yaml
+
+# Define chessboard parameters
+chessboard_size = (9, 6) # Number of inner corners per a chessboard row and column
+square_size = 0.025 # Size of each square in meters (adjust to your board)
+
+# Prepare object points (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+objp = np.zeros((chessboard_size[0] * chessboard_size[1], 3), np.float32)
+objp[:, :2] = np.mgrid[0:chessboard_size[0], 0:chessboard_size[1]].T.reshape(-1, 2) * square_size
+
+# Arrays to store object points and image points from all images
 objpoints = [] # 3d point in real world space
-imgpoints = [] # 2d points in image plane.
- 
-images = glob.glob('C:/Users/DHall29/workspace/app/images/*.jpg')
- 
-for fname in images:
-    img = cv.imread(fname)
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
- 
-    # Find the chess board corners
-    ret, corners = cv.findChessboardCorners(gray, (7,6), None)
- 
-    # If found, add object points, image points (after refining them)
-    if ret == True:
+imgpoints = [] # 2d points in image plane
+
+# Capture video from webcam
+cap = cv2.VideoCapture(0)
+
+# Loop to capture images for calibration
+print("Press 'c' to capture a calibration image. Press 'q' to quit.")
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        print("Failed to capture frame")
+        break
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Find the chessboard corners
+    ret_corners, corners = cv2.findChessboardCorners(gray, chessboard_size, None)
+
+    # If found, add object points, image points
+    if ret_corners:
         objpoints.append(objp)
- 
-        corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
-        imgpoints.append(corners2)
- 
+        imgpoints.append(corners)
+
         # Draw and display the corners
-        cv.drawChessboardCorners(img, (7,6), corners2, ret)
-        cv.imshow('img', img)
-        cv.waitKey(500)
-cv.destroyAllWindows()
- 
-ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        cv2.drawChessboardCorners(frame, chessboard_size, corners, ret_corners)
 
-img = cv.imread('C:/Users/DHall29/workspace/app/images/image12.jpg')
-h,  w = img.shape[:2]
-newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+    # Display the frame
+    cv2.imshow('Calibration', frame)
 
-# undistort
-dst = cv.undistort(img, mtx, dist, None, newcameramtx)
+    key = cv2.waitKey(0)
+    if key & 0xFF == ord('c') and ret_corners: # Capture if 'c' is pressed and corners are found
+        print("Image captured!")
+    elif key & 0xFF == ord('q'): # Quit if 'q' is pressed
+        break
 
-# crop the image
-x, y, w, h = roi
-dst = dst[y:y+h, x:x+w]
-cv.imwrite('calibresult.png', dst)
+cap.release()
+cv2.destroyAllWindows()
 
+# Calibrate the camera if images are captured
+if len(objpoints) > 0:
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-mean_error = 0
-for i in range(len(objpoints)):
-    imgpoints2, _ = cv.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
-    error = cv.norm(imgpoints[i], imgpoints2, cv.NORM_L2)/len(imgpoints2)
-    mean_error += error
+    # Save the calibration parameters to a YAML file
+    calibration_data = {
+        'camera_matrix': mtx.tolist(),
+        'dist_coeff': dist.tolist()
+    }
 
-print( "total error: {}".format(mean_error/len(objpoints)) )
+    with open('calibration_params.yml', 'w') as f:
+        yaml.dump(calibration_data, f)
+
+    print("Calibration parameters saved to calibration_params.yml")
+    print("Camera matrix:\n", mtx)
+    print("Distortion coefficients:\n", dist)
+
+else:
+    print("No images captured for calibration. Please capture images with the chessboard pattern.")
