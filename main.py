@@ -1,15 +1,27 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
+import yaml
 
 if __name__ == "__main__":
-    # TODO: It should be derived from the calibration procedure and parsed by using yml file    
-    # Camera matrix and distortion coefficients (example values)    
-    cam_matrix = np.array([[800, 0, 320],
-                           [0, 800, 240],
-                           [0, 0, 1]], dtype=np.float32)
+    # Load camera matrix and distortion coefficients from the YAML file
+    try:
+        with open('calibration_params.yml', 'r') as f:
+            calibration_data = yaml.safe_load(f)
 
-    dist_coeffs = np.array([-0.3, 0.12, 0.001, 0.002, 0.0], dtype=np.float32)
+        cam_matrix = np.array(calibration_data['camera_matrix'], dtype=np.float32)
+        dist_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
+
+        print("Camera calibration parameters loaded successfully.")
+        print("Camera matrix:\n", cam_matrix)
+        print("Distortion coefficients:\n", dist_coeffs)
+
+    except FileNotFoundError:
+        print("Error: calibration_params.yml not found. Please run the calibration script first.")
+        exit()
+    except yaml.YAMLError as e:
+        print("Error loading YAML file:", e)
+        exit()
 
     # Printed ARuco dimensions
     marker_size = 0.05  # In meters (used for pose estimation)
