@@ -55,6 +55,9 @@ if __name__ == "__main__":
         corners, ids, rejected = detector.detectMarkers(gray)
 
         if ids is not None:
+            # Question: Are you planning to use the estimated pose for any further processing?
+            # If yes, not that the rvecs and tvecs are stored in lists, but they are not avaliable outside the while loop
+            # How many frames you want to store inside the lists?
             rvecs = []
             tvecs = []
             for i in range(len(ids)):
@@ -75,6 +78,10 @@ if __name__ == "__main__":
         # Exit on keypress 'q'
         if cv2.waitKey(wait_time) & 0xFF == ord('q'):
             break
+    
+    # Question: implement a method to store the rvecs and tvecs in a file
+
+        
 
     # Release the video capture object and destroy all windows
     cap.release()
