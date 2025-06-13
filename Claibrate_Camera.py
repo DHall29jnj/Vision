@@ -4,7 +4,7 @@ import yaml
 
 # Define chessboard parameters
 chessboard_size = (9, 6) # Number of inner corners per a chessboard row and column
-square_size = 0.025 # Size of each square in meters (adjust to your board)
+square_size = 0.02 # Size of each square in meters (adjust to your board)
 
 # Prepare object points (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
 objp = np.zeros((chessboard_size[0] * chessboard_size[1], 3), np.float32)
