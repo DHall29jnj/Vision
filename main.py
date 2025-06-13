@@ -24,7 +24,7 @@ if __name__ == "__main__":
         exit()
 
     # Printed ARuco dimensions
-    marker_size = 0.05  # In meters (used for pose estimation)
+    marker_size = 0.02  # In meters
 
     # Parameters
     dictionary_id = aruco.DICT_6X6_250
