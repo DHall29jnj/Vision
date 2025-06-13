@@ -57,8 +57,6 @@ previous_pointer_pos_img = None
 
 previous_filtered_pos = None
 
-ema_alpha = 0.1
-
 # Store pose data
 pointer_poses = []
 
@@ -125,19 +123,6 @@ while True:
             if img_points is not None:
                 current_pointer_pos_img = (int(img_points[0][0][0]), int(img_points[0][0][1]))
 
-
-                # Apply EMA filter to the current position
-                if previous_filtered_pos is None:
-                    # Initialize the filter with the first position
-                    previous_filtered_pos = current_pointer_pos_img
-                else:
-                    # Apply the EMA formula
-                    filtered_x = ema_alpha * current_pointer_pos_img[0] + (1 - ema_alpha) * previous_filtered_pos[0]
-                    filtered_y = ema_alpha * current_pointer_pos_img[1] + (1 - ema_alpha) * previous_filtered_pos[1]
-                    current_pointer_pos_img = (int(filtered_x), int(filtered_y))
-                    previous_filtered_pos = current_pointer_pos_img # Update the previous filtered position
-
-                
                 #Append the current position to the list of points
                 tracked_points.append(current_pointer_pos_img)
                 if len(tracked_points) > 1:
