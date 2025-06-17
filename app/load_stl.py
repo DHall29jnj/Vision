@@ -1,13 +1,13 @@
 import os
 import cv2
+import cv2.aruco as aruco
 import numpy as np
 import trimesh
 import pyrender
 from pathlib import Path
-
 # --- Configuration ---
-aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
-aruco_params = cv2.aruco.DetectorParameters_create()
+aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
+aruco_params = aruco.DetectorParameters()
 
 # Assume standard 3x3 camera matrix and distortion coefficients
 camera_matrix = np.array([[800, 0, 320],
@@ -17,7 +17,7 @@ camera_matrix = np.array([[800, 0, 320],
 dist_coeffs = np.zeros((5, 1))  # Assuming no lens distortion
 
 # Load STL file
-stl_path = "your_model.stl"  # Replace with your STL file path
+stl_path = "C:/Users/DHall29/workspace/app/app/assets/1121.STL"  # Replace with your STL file path
 mesh = trimesh.load(stl_path)
 
 # Convert Trimesh to Pyrender mesh
@@ -46,7 +46,7 @@ while True:
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    corners, ids, rejected = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params)
+    corners, ids, rejected = aruco.ArucoDetector(gray, aruco_dict, aruco_params)
 
     if ids is not None:
         rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(corners, 0.05, camera_matrix, dist_coeffs)
