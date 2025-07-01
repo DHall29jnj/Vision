@@ -86,7 +86,7 @@ if __name__ == "__main__":
                     for n in list(scene.mesh_nodes):
                         scene.remove_node(n)
 
-                    scene.add(tri_mesh, pose=T)
+                    scene.add(tri_mesh, pose=np.linalg.inv(T))
 
                     # Render
                     color, depth = r.render(scene)

@@ -24,4 +24,4 @@ if __name__ == "__main__":
     scene.add(light)
 
     # Show viewer
-    viewer = pyrender.Viewer(scene, use_raymond_lighting=True)
+    viewer = pyrender.Viewer(scene, use_raymond_lighting=True)q
