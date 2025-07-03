@@ -87,7 +87,7 @@ while True:
 
     current_pointer_pos_img = None
     
-    if not ids.any():
+    if ids is None or not ids.any():
         #print("References on bone and/or pointer were not detected.")
         continue
     
