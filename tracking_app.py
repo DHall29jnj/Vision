@@ -2,6 +2,7 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 import yaml
+import time
 
 if __name__ == "__main__":
     # Load camera matrix and distortion coefficients from the YAML file
@@ -73,12 +74,21 @@ previous_filtered_pos = None
 
 # Store pose data
 pointer_poses = []
+pntr_id :int = 62
+pntr_pos_list = []
+acquisition_time :float=10
+start_time = time.time()
+
+
 
 while True:
     ret, image = cap.read()
     if not ret:
         print("Error: Failed to read frame.")
         break
+    
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time: {elapsed_time}")
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -88,15 +98,34 @@ while True:
     current_pointer_pos_img = None
     
     if ids is None or not ids.any():
-        #print("References on bone and/or pointer were not detected.")
         continue
     
-    # if not 63 in ids or not 23 in ids:
-    #     print("")
-    #     continue
+    if not pntr_id in ids and not 23 in ids:
+        #print("")
+        continue
+    
     for id in ids:
         print(f"id {id}")
-    # print("We have the markers!")
+        
+    print("We have the markers!")
+    
+    id = None
+    if ids[0] == pntr_id:
+        id = 0
+    else:
+        id = 1
+        
+    if elapsed_time > acquisition_time:
+        print("Data Acquired")
+        break
+    
+    ret, rvec, tvec = cv2.solvePnP(obj_points, corners[id], cam_matrix, dist_coeffs)
+    
+    #TODO
+    # compute inverse
+    pntr_pos_list.append(tvec)
+    print(rvec)
+    print(tvec)
     
     
     
@@ -109,7 +138,7 @@ while True:
 #         for i in range(len(ids)):
 #             # Assuming marker ID 23 is the pointer marker and ID 62 is the reference marker
 #             if ids[i] == 23:
-#                 ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+#                 
 #                 if ret:
 #                     pointer_rvec = rvec
 #                     pointer_tvec = tvec
