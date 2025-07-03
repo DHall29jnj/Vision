@@ -86,78 +86,91 @@ while True:
     corners, ids, rejected = detector.detectMarkers(gray)
 
     current_pointer_pos_img = None
+    
+    if not ids:
+        #print("References on bone and/or pointer were not detected.")
+        continue
+    
+    # if not 63 in ids or not 23 in ids:
+    #     print("")
+    #     continue
+    for id in ids:
+        print(f"id {id}")
+    # print("We have the markers!")
+    
+    
+    
+    
+      
+#         """ pointer_rvec = None
+#         pointer_tvec = None
+#         reference_rvec = None
+#         reference_tvec = None
+#         for i in range(len(ids)):
+#             # Assuming marker ID 23 is the pointer marker and ID 62 is the reference marker
+#             if ids[i] == 23:
+#                 ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+#                 if ret:
+#                     pointer_rvec = rvec
+#                     pointer_tvec = tvec
+#                     # Draw axes for pointer marker
+#                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
+#             elif ids[i] == 62:
+#                 ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+#                 if ret:
+#                     reference_rvec = rvec
+#                     reference_tvec = tvec
+#                     # Draw axes for reference marker
+#                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size * 2) # Larger axes for ref marker
 
-    if ids is not None:
-        pointer_rvec = None
-        pointer_tvec = None
-        reference_rvec = None
-        reference_tvec = None
+#         if pointer_rvec is not None and reference_rvec is not None:
+#             # Calculate pointer tip position in camera frame
+#             pointer_tip_camera_frame = cv2.Rodrigues(pointer_rvec) [0] @ pointer_offset + pointer_tvec
 
-        for i in range(len(ids)):
-            # Assuming marker ID 23 is the pointer marker and ID 62 is the reference marker
-            if ids[i] == 23:
-                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
-                if ret:
-                    pointer_rvec = rvec
-                    pointer_tvec = tvec
-                    # Draw axes for pointer marker
-                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
-            elif ids[i] == 62:
-                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
-                if ret:
-                    reference_rvec = rvec
-                    reference_tvec = tvec
-                    # Draw axes for reference marker
-                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size * 2) # Larger axes for ref marker
+#             # Calculate transformation from camera frame to reference frame
+#             # This is the inverse of the transformation from reference frame to camera frame
+#             R_ref_to_cam, _ = cv2.Rodrigues(reference_rvec)
+#             t_ref_to_cam = reference_tvec
 
-        if pointer_rvec is not None and reference_rvec is not None:
-            # Calculate pointer tip position in camera frame
-            pointer_tip_camera_frame = cv2.Rodrigues(pointer_rvec) [0] @ pointer_offset + pointer_tvec
+#             R_cam_to_ref = R_ref_to_cam.T # Transpose of rotation matrix is its inverse
+#             t_cam_to_ref = -R_cam_to_ref @ t_ref_to_cam
 
-            # Calculate transformation from camera frame to reference frame
-            # This is the inverse of the transformation from reference frame to camera frame
-            R_ref_to_cam, _ = cv2.Rodrigues(reference_rvec)
-            t_ref_to_cam = reference_tvec
+#             # Transform pointer tip position from camera frame to reference frame
+#             pointer_tip_reference_frame = R_cam_to_ref @ pointer_tip_camera_frame + t_cam_to_ref
 
-            R_cam_to_ref = R_ref_to_cam.T # Transpose of rotation matrix is its inverse
-            t_cam_to_ref = -R_cam_to_ref @ t_ref_to_cam
-
-            # Transform pointer tip position from camera frame to reference frame
-            pointer_tip_reference_frame = R_cam_to_ref @ pointer_tip_camera_frame + t_cam_to_ref
-
-            # Save the coordinates
-            with open(output_file, "a") as f:
-                f.write(f"{pointer_tip_reference_frame[0,0]} {pointer_tip_reference_frame[1,0]} {pointer_tip_reference_frame[2,0]}\n")
+#             # Save the coordinates
+#             with open(output_file, "a") as f:
+#                 f.write(f"{pointer_tip_reference_frame[0,0]} {pointer_tip_reference_frame[1,0]} {pointer_tip_reference_frame[2,0]}\n")
             
-            # Print the coordinates (optional)
-            # print(f"Pointer tip in reference frame: {pointer_tip_reference_frame}")
+#             # Print the coordinates (optional)
+#             # print(f"Pointer tip in reference frame: {pointer_tip_reference_frame}")
 
-            # Project pointer tip position in camera frame to 2D image plane
-            img_points, _ = cv2.projectPoints(pointer_tip_camera_frame, np.zeros((3,1)), np.zeros((3,1)), cam_matrix, dist_coeffs)
-            if img_points is not None:
-                current_pointer_pos_img = (int(img_points[0][0][0]), int(img_points[0][0][1]))
+#             # Project pointer tip position in camera frame to 2D image plane
+#             img_points, _ = cv2.projectPoints(pointer_tip_camera_frame, np.zeros((3,1)), np.zeros((3,1)), cam_matrix, dist_coeffs)
+#             if img_points is not None:
+#                 current_pointer_pos_img = (int(img_points[0][0][0]), int(img_points[0][0][1]))
 
-                #Append the current position to the list of points
-                tracked_points.append(current_pointer_pos_img)
-                if len(tracked_points) > 1:
-                    pts = np.array(tracked_points, np.int32).reshape((-1, 1, 2))
-                    cv2.polylines(trajectory_canvas, [pts], False, (0, 0, 255), 2)
+#                 #Append the current position to the list of points
+#                 tracked_points.append(current_pointer_pos_img)
+#                 if len(tracked_points) > 1:
+#                     pts = np.array(tracked_points, np.int32).reshape((-1, 1, 2))
+#                     cv2.polylines(trajectory_canvas, [pts], False, (0, 0, 255), 2)
 
-                # Draw a circle at the current pointer tip position
-                cv2.circle(trajectory_canvas, current_pointer_pos_img, 5, (0, 255, 0), -1) # Green circle
+#                 # Draw a circle at the current pointer tip position
+#                 cv2.circle(trajectory_canvas, current_pointer_pos_img, 5, (0, 255, 0), -1) # Green circle
 
-        aruco.drawDetectedMarkers(image, corners, ids) # Draw detected markers and their IDs
+#         aruco.drawDetectedMarkers(image, corners, ids) # Draw detected markers and their IDs
 
-    #Overlay the trajectory canvas onto the image
-    combined_image = cv2.addWeighted(image, 1, trajectory_canvas, 1, 0)
+#     #Overlay the trajectory canvas onto the image
+#     combined_image = cv2.addWeighted(image, 1, trajectory_canvas, 1, 0)
 
-    # Display the image
-    cv2.imshow("ArUco Pointer Tracking", combined_image)
+#     # Display the image
+#     cv2.imshow("ArUco Pointer Tracking", combined_image)
 
-    # Exit on keypress 'q'
-    if cv2.waitKey(wait_time) & 0xFF == ord('q'):
-        break
+#     # Exit on keypress 'q'
+#     if cv2.waitKey(wait_time) & 0xFF == ord('q'):
+#         break
 
-# Release the video capture object and destroy all windows
-cap.release()
-cv2.destroyAllWindows()
+# # Release the video capture object and destroy all windows
+# cap.release()
+# cv2.destroyAllWindows() """
