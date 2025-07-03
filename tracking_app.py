@@ -130,7 +130,7 @@ while True:
                 f.write(f"{pointer_tip_reference_frame[0,0]} {pointer_tip_reference_frame[1,0]} {pointer_tip_reference_frame[2,0]}\n")
             
             # Print the coordinates (optional)
-            print(f"Pointer tip in reference frame: {pointer_tip_reference_frame}")
+            # print(f"Pointer tip in reference frame: {pointer_tip_reference_frame}")
 
             # Project pointer tip position in camera frame to 2D image plane
             img_points, _ = cv2.projectPoints(pointer_tip_camera_frame, np.zeros((3,1)), np.zeros((3,1)), cam_matrix, dist_coeffs)

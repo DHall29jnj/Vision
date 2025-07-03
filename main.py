@@ -83,6 +83,18 @@ if __name__ == "__main__":
                     # Draw detected marker and axes
                     aruco.drawDetectedMarkers(image, corners) # Draw the detected markers
                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size) # Draw the axes
+                    
+                    RotAndTrans_data = {
+                        'rvecs': rvec.tolist(),
+                        'tvecs': tvec.tolist()
+                    }
+
+                    with open('RotAndTrans_data.yml', 'w') as f:
+                        yaml.dump(RotAndTrans_data, f)
+
+                    print("Rotation and Translation vectors  saved to RotAndTrans_data.yml")
+                    print("Rotation Vector:\n", rvec)
+                    print("Translation Vector:\n", tvec)
 
         # Display the image
         cv2.imshow("ArUco Pose", image)
@@ -92,8 +104,6 @@ if __name__ == "__main__":
             break
     
     # Question: implement a method to store the rvecs and tvecs in a file
-
-        
 
     # Release the video capture object and destroy all windows
     cap.release()
