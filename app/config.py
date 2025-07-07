@@ -1,22 +1,20 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-import dotenv
 import os
 import yaml
 
-dotenv.load_dotenv()
 
 try:
         with open('calibration_params.yml', 'r') as f:
             calibration_data = yaml.safe_load(f)
 
         cam_matrix = np.array(calibration_data['camera_matrix'], dtype=np.float32)
-        dist_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
+        disto_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
 
         print("Camera calibration parameters loaded successfully.")
         print("Camera matrix:\n", cam_matrix)
-        print("Distortion coefficients:\n", dist_coeffs)
+        print("Distortion coefficients:\n", disto_coeffs)
 
 except FileNotFoundError:
         print("Error: calibration_params.yml not found. Please run the calibration script first.")
@@ -33,7 +31,7 @@ class Config:
 
         self.camera_matrix = cam_matrix
 
-        self.dist_coeffs = dist_coeffs
+        self.dist_coeffs = disto_coeffs
 
         self.marker_size = 0.025  # In meters (used for pose estimation)
 
