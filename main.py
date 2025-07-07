@@ -9,7 +9,7 @@ if __name__ == "__main__":
     config = Config.get_instance()
     
     # Parameters
-    dictionary_id = aruco.DICT_6X6_250
+    dictionary_id = aruco.DICT_4X4_50
     estimate_pose = True
     show_rejected = False
     camera_id = 0
@@ -49,6 +49,7 @@ if __name__ == "__main__":
         corners, ids, rejected = detector.detectMarkers(gray)
 
         if ids is not None:
+            
             
             # How many frames you want to store inside the lists?
             max_frames = 50

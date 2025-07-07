@@ -25,14 +25,14 @@ if __name__ == "__main__":
         exit()
 
 # Printed ARuco dimensions
-marker_size = 0.2  # In meters
+marker_size = 0.05  # In meters
 
 # Pointer offset (3D vector from marker center to pointer tip)
 # You need to determine this through calibration (e.g., by touching known points)
 pointer_offset = np.array([0, 0, 0.1], dtype=np.float32) # Example: 10cm along the marker's Z-axis
 
 # Parameters
-dictionary_id = aruco.DICT_6X6_250
+dictionary_id = aruco.DICT_4X4_50
 estimated_pose = True
 show_rejected = False
 camera_id = 0
@@ -68,10 +68,6 @@ tracked_points = []
 _, frame = cap.read() #read one frame to get image dimensions
 trajectory_canvas = np.zeros_like(frame)
 
-previous_pointer_pos_img = None
-
-previous_filtered_pos = None
-
 # Store pose data
 pointer_poses = []
 pntr_id :int = 62
@@ -88,7 +84,7 @@ while True:
         break
     
     elapsed_time = time.time() - start_time
-    print(f"Elapsed time: {elapsed_time}")
+    #print(f"Elapsed time: {elapsed_time}")
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -101,7 +97,7 @@ while True:
         continue
     
     if not pntr_id in ids and not 23 in ids:
-        #print("")
+        print(f"ids {ids}")
         continue
     
     for id in ids:
@@ -121,13 +117,23 @@ while True:
     
     ret, rvec, tvec = cv2.solvePnP(obj_points, corners[id], cam_matrix, dist_coeffs)
     
-    #TODO
-    # compute inverse
+    #TODO find inverse
     pntr_pos_list.append(tvec)
     print(rvec)
     print(tvec)
     
-    
+    # Calculate Inverse
+    # Convert rvec to a rotation matrix
+    R, _ = cv2.Rodrigues(rvec)
+    #Inverse rotation
+    R_inv = R.T
+    # Inverse Translation 
+    tvec_inv = -np.dot(R_inv, tvec)
+    rvec_inv, _ = cv2.Rodrigues(R_inv)
+    print("Original rvec: ", rvec)
+    print("Inverse rvec: ", rvec_inv)
+    print("Original tvec: ", tvec)
+    print("Inverse tvec: ", tvec_inv)
     
     
       

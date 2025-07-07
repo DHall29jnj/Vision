@@ -33,10 +33,10 @@ class Config:
 
         self.dist_coeffs = disto_coeffs
 
-        self.marker_size = 0.025  # In meters (used for pose estimation)
+        self.marker_size = 0.05  # In meters (used for pose estimation)
 
-        self.pointer_id = 62
-        self.stat_ref_id = 23
+        self.pointer_id = 1
+        self.stat_ref_id = 2
 
 
         self.camera_id = int(os.getenv("CAMERA_ID", 0))
