@@ -6,6 +6,8 @@ from app.config import Config
 
 if __name__ == "__main__":
 
+    config = Config.get_instance()
+    
     # Parameters
     dictionary_id = aruco.DICT_6X6_250
     estimate_pose = True
@@ -29,10 +31,10 @@ if __name__ == "__main__":
 
     # Define object points for a square planar ArUco marker (z=0)
     obj_points = np.array([
-        [-Config.marker_size/2,  Config.marker_size/2, 0],
-        [ Config.marker_size/2,  Config.marker_size/2, 0],
-        [ Config.marker_size/2, -Config.marker_size/2, 0],
-        [-Config.marker_size/2, -Config.marker_size/2, 0]
+        [-config.marker_size/2,  config.marker_size/2, 0],
+        [ config.marker_size/2,  config.marker_size/2, 0],
+        [ config.marker_size/2, -config.marker_size/2, 0],
+        [-config.marker_size/2, -config.marker_size/2, 0]
     ], dtype=np.float32)
 
     while True:
@@ -54,7 +56,7 @@ if __name__ == "__main__":
             tvecs = []
             for i in range(len(ids)):
                 # Estimate pose using solvePnP
-                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], Config.camera_matrix, Config.dist_coeffs)
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], config.camera_matrix, cameraMatrix=config.dist_coeffs)
 
                 if ret: # Check if solvePnP was successful
                     rvecs.append(rvec)
@@ -62,7 +64,7 @@ if __name__ == "__main__":
 
                     # Draw detected marker and axes
                     aruco.drawDetectedMarkers(image, corners) # Draw the detected markers
-                    cv2.drawFrameAxes(image, Config.camera_matrix, Config.dist_coeffs, rvec, tvec, Config.marker_size) # Draw the axes
+                    cv2.drawFrameAxes(image, config.dist_coeffs, rvec, tvec, config.marker_size) # Draw the axes
                     
                     RotAndTrans_data = {
                         'rvecs': rvec.tolist(),
