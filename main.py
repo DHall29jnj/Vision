@@ -49,10 +49,7 @@ if __name__ == "__main__":
         corners, ids, rejected = detector.detectMarkers(gray)
 
         if ids is not None:
-            
-            
             # How many frames you want to store inside the lists?
-            max_frames = 50
             rvecs = []
             tvecs = []
             for i in range(len(ids)):
@@ -92,3 +89,20 @@ if __name__ == "__main__":
     # Release the video capture object and destroy all windows
     cap.release()
     cv2.destroyAllWindows()
+    
+    
+    
+    
+    
+'''import cv2
+import numpy as np
+ 
+# Assume rvec, tvec from solvePnP
+rotation_matrix, _ = cv2.Rodrigues(rvec)
+ 
+# Camera pose in marker's coordinate system
+R_cam_to_marker = rotation_matrix.T  # Inverse rotation
+t_cam_to_marker = -R_cam_to_marker @ tvec  # Inverse translation
+ 
+print("Camera position in marker's frame:", t_cam_to_marker)
+print("Camera orientation in marker's frame:", R_cam_to_marker)'''
