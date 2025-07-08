@@ -14,8 +14,8 @@ if __name__ == "__main__":
         dist_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
 
         print("Camera calibration parameters loaded successfully.")
-        print("Camera matrix:\n", cam_matrix)
-        print("Distortion coefficients:\n", dist_coeffs)
+        #print("Camera matrix:\n", cam_matrix)
+        #print("Distortion coefficients:\n", dist_coeffs)
 
     except FileNotFoundError:
         print("Error: calibration_params.yml not found. Please run the calibration script first.")
@@ -72,7 +72,35 @@ if __name__ == "__main__":
         if ids is None or not ids.any():
             continue
         
-        #Solver for the Camera's Position and Orientation in the Pointer's Reference frame
+        if not ref_id in ids:
+            #print(f"ids shown: {ids} \n please use marker 2 for the reference id")
+            continue
+        
+        if ref_id and pntr_id in ids:
+            print("We have the Reference and the Pointer!")
+            continue
+            
+        if not ref_id or pntr_id in ids:
+            print("Did not find both reference and pointer")
+            break
+        
+        if not pntr_id in ids:
+            #print(f"ids shown: {ids} \n please use marker 1 for the pointer id")
+            continue
+        
+        if ids is not None:
+            rvecs = []  # Initialize empty lists outside the loop
+            tvecs = []  # Initialize empty lists outside the loop
+            for i in range(len(ids)):
+                # Estimate pose for each marker
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+                if ret:
+                    rvecs.append(rvec)
+                    tvecs.append(tvec)
+                    # You might want to draw axes and save data for each marker here
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
+       
+        '''#Solver for the Camera's Position and Orientation in the Pointer's Reference frame
         
         if not ref_id in ids:
             print(f"ids shown: {ids} \n please use marker 2 for the reference id")
@@ -165,7 +193,7 @@ if __name__ == "__main__":
         print("Camera orientation in marker's frame:", R_cam_to_pntr)
         
         
-        
+        '''
         # Display the image
         cv2.imshow("ArUco Pose", image)
 
