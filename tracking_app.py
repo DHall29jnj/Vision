@@ -90,8 +90,6 @@ while True:
 
     # Detect markers
     corners, ids, rejected = detector.detectMarkers(gray)
-
-    current_pointer_pos_img = None
     
     if ids is None or not ids.any():
         continue
@@ -117,23 +115,22 @@ while True:
     
     ret, rvec, tvec = cv2.solvePnP(obj_points, corners[id], cam_matrix, dist_coeffs)
     
-    #TODO find inverse
+    
     pntr_pos_list.append(tvec)
     print(rvec)
     print(tvec)
     
-    # Calculate Inverse
-    # Convert rvec to a rotation matrix
-    R, _ = cv2.Rodrigues(rvec)
-    #Inverse rotation
-    R_inv = R.T
-    # Inverse Translation 
-    tvec_inv = -np.dot(R_inv, tvec)
-    rvec_inv, _ = cv2.Rodrigues(R_inv)
+    '''Calculate Inverse'''
+    rotation_matrix, _ = cv2.Rodrigues(rvec)  # Convert rvec to a rotation matrix
+    
+    R_cam_to_marker_frame = rotation_matrix.T #Inverse rotation
+    
+    T_cam_to_marker_frame = -R_cam_to_marker_frame @ tvec # Inverse Translation 
+    
     print("Original rvec: ", rvec)
-    print("Inverse rvec: ", rvec_inv)
+    print("Inverse rvec: ", R_cam_to_marker_frame)
     print("Original tvec: ", tvec)
-    print("Inverse tvec: ", tvec_inv)
+    print("Inverse tvec: ", T_cam_to_marker_frame)
     
     
       

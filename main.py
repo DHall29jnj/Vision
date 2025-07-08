@@ -5,9 +5,26 @@ import yaml
 from app.config import Config
 
 if __name__ == "__main__":
-
-    config = Config.get_instance()
     
+    try:
+        with open('calibration_params.yml', 'r') as f:
+            calibration_data = yaml.safe_load(f)
+
+        cam_matrix = np.array(calibration_data['camera_matrix'], dtype=np.float32)
+        dist_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
+
+        print("Camera calibration parameters loaded successfully.")
+        print("Camera matrix:\n", cam_matrix)
+        print("Distortion coefficients:\n", dist_coeffs)
+
+    except FileNotFoundError:
+        print("Error: calibration_params.yml not found. Please run the calibration script first.")
+        exit()
+    except yaml.YAMLError as e:
+        print("Error loading YAML file:", e)
+        exit()
+    
+
     # Parameters
     dictionary_id = aruco.DICT_4X4_50
     estimate_pose = True
@@ -19,6 +36,10 @@ if __name__ == "__main__":
     dictionary = aruco.getPredefinedDictionary(dictionary_id)
     detector_params = aruco.DetectorParameters()
     detector = aruco.ArucoDetector(dictionary, detector_params)
+    
+    pntr_id = 1
+    ref_id = 2
+    marker_size = 0.05
 
     # Setup video input
     cap = cv2.VideoCapture(video_file if video_file else camera_id)
@@ -31,10 +52,10 @@ if __name__ == "__main__":
 
     # Define object points for a square planar ArUco marker (z=0)
     obj_points = np.array([
-        [-config.marker_size/2,  config.marker_size/2, 0],
-        [ config.marker_size/2,  config.marker_size/2, 0],
-        [ config.marker_size/2, -config.marker_size/2, 0],
-        [-config.marker_size/2, -config.marker_size/2, 0]
+        [-marker_size/2,  marker_size/2, 0],
+        [ marker_size/2,  marker_size/2, 0],
+        [ marker_size/2, -marker_size/2, 0],
+        [-marker_size/2, -marker_size/2, 0]
     ], dtype=np.float32)
 
     while True:
@@ -47,14 +68,35 @@ if __name__ == "__main__":
 
         # Detect markers
         corners, ids, rejected = detector.detectMarkers(gray)
-
+        
+        if ids is None or not ids.any():
+            continue
+        
+        #Solver for the Camera's Position and Orientation in the Pointer's Reference frame
+        
+        if not ref_id in ids:
+            print(f"ids shown: {ids} \n please use marker 2 for the reference id")
+            continue
+        
+        for Rid in ids:
+            print(f"id {Rid}")
+            continue
+        
+        print("We have the Reference!")
+        
+        Rid = None
+        if ids[0] == ref_id:
+            Rid = 0
+        else:
+            Rid = 1
+        
         if ids is not None:
             # How many frames you want to store inside the lists?
             rvecs = []
             tvecs = []
             for i in range(len(ids)):
-                # Estimate pose using solvePnP
-                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], config.camera_matrix, cameraMatrix=config.dist_coeffs)
+                #Pointers Position
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[Rid], cam_matrix, dist_coeffs)
 
                 if ret: # Check if solvePnP was successful
                     rvecs.append(rvec)
@@ -62,22 +104,68 @@ if __name__ == "__main__":
 
                     # Draw detected marker and axes
                     aruco.drawDetectedMarkers(image, corners) # Draw the detected markers
-                    cv2.drawFrameAxes(image, config.dist_coeffs, rvec, tvec, config.marker_size) # Draw the axes
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size) # Draw the axes
                     
-                    RotAndTrans_data = {
-                        'rvecs': rvec.tolist(),
-                        'tvecs': tvec.tolist()
-                    }
+                    # Assume rvec, tvec from solvePnP
+                    rotation_matrix, _ = cv2.Rodrigues(rvec)
+                
+                    # Camera pose in marker's coordinate system
+                    R_cam_to_ref = rotation_matrix.T  # Inverse rotation
+                    t_cam_to_ref = -R_cam_to_ref @ tvec  # Inverse translation
+                
+                    
+                   
+                   
+            #Solver for the Camera's Position and Orientation in the Pointer's Reference frame
+            
+        if not pntr_id in ids:
+            print(f"ids shown: {ids} \n please use marker 1 for the pointer id")
+            continue
+        
+        for Pid in ids:
+            print(f"id {Pid}")
+            continue
+        
+        print("We have the pointer!")
+        
+        Pid = None
+        if ids[0] == pntr_id:
+            Pid = 0
+        else:
+            Pid = 1
+        
+        if ids is not None:
+            # How many frames you want to store inside the lists?
+            rvecs = []
+            tvecs = []
+            for i in range(len(ids)):
+                #Pointers Position
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[Pid], cam_matrix, dist_coeffs)
 
-                    with open('RotAndTrans_data.yml', 'w') as f:
-                        yaml.dump(RotAndTrans_data, f)
-                        
+                if ret: # Check if solvePnP was successful
+                    rvecs.append(rvec)
+                    tvecs.append(tvec)
+
+                    # Draw detected marker and axes
+                    aruco.drawDetectedMarkers(image, corners) # Draw the detected markers
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size) # Draw the axes
+                    
+                    # Assume rvec, tvec from solvePnP
+                    rotation_matrix, _ = cv2.Rodrigues(rvec)
+                
+                    # Camera pose in marker's coordinate system
+                    R_cam_to_pntr = rotation_matrix.T  # Inverse rotation
+                    t_cam_to_marker = -R_cam_to_pntr @ tvec  # Inverse translation
                     
 
-                    print("Rotation and Translation vectors  saved to RotAndTrans_data.yml")
-                    print("Rotation Vector:\n", rvec)
-                    print("Translation Vector:\n", tvec)
-
+        
+        print("Camera position in the reference frame:", t_cam_to_ref)
+        print("Camera orientation in reference frame:", R_cam_to_ref)        
+        print("Camera position in marker's frame:", t_cam_to_marker)
+        print("Camera orientation in marker's frame:", R_cam_to_pntr)
+        
+        
+        
         # Display the image
         cv2.imshow("ArUco Pose", image)
 
@@ -91,18 +179,3 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()
     
     
-    
-    
-    
-'''import cv2
-import numpy as np
- 
-# Assume rvec, tvec from solvePnP
-rotation_matrix, _ = cv2.Rodrigues(rvec)
- 
-# Camera pose in marker's coordinate system
-R_cam_to_marker = rotation_matrix.T  # Inverse rotation
-t_cam_to_marker = -R_cam_to_marker @ tvec  # Inverse translation
- 
-print("Camera position in marker's frame:", t_cam_to_marker)
-print("Camera orientation in marker's frame:", R_cam_to_marker)'''
