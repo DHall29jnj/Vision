@@ -70,7 +70,7 @@ trajectory_canvas = np.zeros_like(frame)
 
 # Store pose data
 pointer_poses = []
-pntr_id :int = 62
+pntr_id :int = 1
 pntr_pos_list = []
 acquisition_time :float=10
 start_time = time.time()
@@ -84,7 +84,7 @@ while True:
         break
     
     elapsed_time = time.time() - start_time
-    #print(f"Elapsed time: {elapsed_time}")
+    print(f"Elapsed time: {elapsed_time}")
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -96,8 +96,8 @@ while True:
     if ids is None or not ids.any():
         continue
     
-    if not pntr_id in ids and not 23 in ids:
-        print(f"ids {ids}")
+    if not pntr_id in ids and not 2 in ids:
+        #print(f"ids {ids}")
         continue
     
     for id in ids:
