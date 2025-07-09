@@ -2,25 +2,10 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 import yaml
-from config.config import Config
-
-
-def main():
-    # Get the single instance of the Config class
-    configs = Config.get_instance()
-
-    # Now you can access all the configuration variables
-    print(f"Marker Size: {configs.marker_size}")
-    print(f"Camera ID: {configs.camera_id}")
-    print(f"STL Path: {configs.stl_path}")
-    print(f"ArUco Dictionary: {configs.aruco_dict}")
-    print(f"Camera Matrix:\n {configs.camera_matrix}")
-    print(f"Marker Size:\n {configs.marker_size}")
-
+from core.config import Config
 
 if __name__ == "__main__":
-    
-    main()
+    config = Config.get_instance()
     
     # Parameters
     dictionary_id = aruco.DICT_4X4_50
