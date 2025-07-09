@@ -10,11 +10,11 @@ try:
             calibration_data = yaml.safe_load(f)
 
         cam_matrix = np.array(calibration_data['camera_matrix'], dtype=np.float32)
-        disto_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
+        dist_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
 
         print("Camera calibration parameters loaded successfully.")
         print("Camera matrix:\n", cam_matrix)
-        print("Distortion coefficients:\n", disto_coeffs)
+        print("Distortion coefficients:\n", dist_coeffs)
 
 except FileNotFoundError:
         print("Error: calibration_params.yml not found. Please run the calibration script first.")
@@ -26,17 +26,17 @@ except yaml.YAMLError as e:
 class Config:
     def __init__(self):
 
-        self.aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)        
+        self.aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)        
         self.aruco_params = aruco.DetectorParameters()
 
-        self.camera_matrix = cam_matrix
+        self.cam_matrix = cam_matrix
 
-        self.dist_coeffs = disto_coeffs
+        self.dist_coeffs = dist_coeffs
 
         self.marker_size = 0.05  # In meters (used for pose estimation)
 
-        self.pointer_id = 1
-        self.stat_ref_id = 2
+        self.pnter_id = 1
+        self.ref_id = 2
 
 
         self.camera_id = int(os.getenv("CAMERA_ID", 0))

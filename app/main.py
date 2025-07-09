@@ -2,28 +2,26 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 import yaml
+from config.config import Config
+
+
+def main():
+    # Get the single instance of the Config class
+    configs = Config.get_instance()
+
+    # Now you can access all the configuration variables
+    print(f"Marker Size: {configs.marker_size}")
+    print(f"Camera ID: {configs.camera_id}")
+    print(f"STL Path: {configs.stl_path}")
+    print(f"ArUco Dictionary: {configs.aruco_dict}")
+    print(f"Camera Matrix:\n {configs.camera_matrix}")
+    print(f"Marker Size:\n {configs.marker_size}")
+
 
 if __name__ == "__main__":
     
-    try:
-        with open('calibration_params.yml', 'r') as f:
-            calibration_data = yaml.safe_load(f)
-
-        cam_matrix = np.array(calibration_data['camera_matrix'], dtype=np.float32)
-        dist_coeffs = np.array(calibration_data['dist_coeff'], dtype=np.float32)
-
-        print("Camera calibration parameters loaded successfully.")
-        #print("Camera matrix:\n", cam_matrix)
-        #print("Distortion coefficients:\n", dist_coeffs)
-
-    except FileNotFoundError:
-        print("Error: calibration_params.yml not found. Please run the calibration script first.")
-        exit()
-    except yaml.YAMLError as e:
-        print("Error loading YAML file:", e)
-        exit()
+    main()
     
-
     # Parameters
     dictionary_id = aruco.DICT_4X4_50
     estimate_pose = True
@@ -51,10 +49,10 @@ if __name__ == "__main__":
 
     # Define object points for a square planar ArUco marker (z=0)
     obj_points = np.array([
-        [-marker_size/2,  marker_size/2, 0],
-        [ marker_size/2,  marker_size/2, 0],
-        [ marker_size/2, -marker_size/2, 0],
-        [-marker_size/2, -marker_size/2, 0]
+        [-main.configs.marker_size/2,  configs.marker_size/2, 0],
+        [ configs.marker_size/2,  configs.marker_size/2, 0],
+        [ configs.marker_size/2, -configs.marker_size/2, 0],
+        [-configs.marker_size/2, -configs.marker_size/2, 0]
     ], dtype=np.float32)
 
     while True:
@@ -74,7 +72,7 @@ if __name__ == "__main__":
             for i in range(len(ids)):
                 marker_id = ids[i] # Access the marker ID
                 # Estimate pose for each marker
-                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], configs.cam_matrix, configs.dist_coeffs)
                 if ret:
                     rvecs.append(rvec)
                     tvecs.append(tvec)
@@ -109,7 +107,7 @@ if __name__ == "__main__":
                         
                         print("Camera position in the reference frame:", t_cam_to_ref)
                         print("Camera orientation in reference frame:", R_cam_to_ref)
-                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
+                    cv2.drawFrameAxes(image, configs.cam_matrix, configs.dist_coeffs, rvec, tvec, marker_size)
                     
         # Display the image
         cv2.imshow("ArUco Pose", image)
