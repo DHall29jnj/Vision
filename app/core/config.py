@@ -35,18 +35,19 @@ class Config:
 
         self.marker_size = 0.05  # In meters (used for pose estimation)
 
-        self.pnter_id = 1
+        self.pntr_id = 1
         self.ref_id = 2
 
 
         self.camera_id = int(os.getenv("CAMERA_ID", 0))
+        '''
         self.assets_folder = os.getenv("ASSETS_FOLDER", "assets")
         self.model = os.getenv("MODEL", "1130.STL")
         self.stl_path = os.path.join(self.assets_folder, self.model)
 
         if not os.path.exists(self.stl_path):
             raise ValueError(f"STL file not found: {self.stl_path}")
-        
+        '''
 
     @staticmethod
     def get_instance():

@@ -1,17 +1,27 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-import yaml
+import trimesh
 from core.config import Config
 
 if __name__ == "__main__":
     config = Config.get_instance()
     
+    # --- ArUco Setup ---
+    aruco_dict = config.aruco_dict
+    aruco_params = config.aruco_params
+
+    cam_matrix = config.cam_matrix
+    dist_coeffs = config.dist_coeffs
+    pntr_id = config.pntr_id
+    ref_id = config.ref_id
+    marker_size = config.marker_size
+    
     # Parameters
     dictionary_id = aruco.DICT_4X4_50
     estimate_pose = True
     show_rejected = False
-    camera_id = 0
+    camera_id = config.camera_id
     video_file = ""  # Leave blank to use webcam
 
     # Setup dictionary and detector
@@ -19,10 +29,7 @@ if __name__ == "__main__":
     detector_params = aruco.DetectorParameters()
     detector = aruco.ArucoDetector(dictionary, detector_params)
     
-    pntr_id = 1
-    ref_id = 2
-    marker_size = 0.05
-
+    
     # Setup video input
     cap = cv2.VideoCapture(video_file if video_file else camera_id)
 
@@ -34,10 +41,10 @@ if __name__ == "__main__":
 
     # Define object points for a square planar ArUco marker (z=0)
     obj_points = np.array([
-        [-main.configs.marker_size/2,  configs.marker_size/2, 0],
-        [ configs.marker_size/2,  configs.marker_size/2, 0],
-        [ configs.marker_size/2, -configs.marker_size/2, 0],
-        [-configs.marker_size/2, -configs.marker_size/2, 0]
+        [-marker_size/2, marker_size/2, 0],
+        [ marker_size/2,  marker_size/2, 0],
+        [ marker_size/2, -marker_size/2, 0],
+        [-marker_size/2, -marker_size/2, 0]
     ], dtype=np.float32)
 
     while True:
@@ -57,7 +64,7 @@ if __name__ == "__main__":
             for i in range(len(ids)):
                 marker_id = ids[i] # Access the marker ID
                 # Estimate pose for each marker
-                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], configs.cam_matrix, configs.dist_coeffs)
+                ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
                 if ret:
                     rvecs.append(rvec)
                     tvecs.append(tvec)
@@ -92,7 +99,7 @@ if __name__ == "__main__":
                         
                         print("Camera position in the reference frame:", t_cam_to_ref)
                         print("Camera orientation in reference frame:", R_cam_to_ref)
-                    cv2.drawFrameAxes(image, configs.cam_matrix, configs.dist_coeffs, rvec, tvec, marker_size)
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
                     
         # Display the image
         cv2.imshow("ArUco Pose", image)
