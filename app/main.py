@@ -68,6 +68,26 @@ if __name__ == "__main__":
                 if ret:
                     rvecs.append(rvec)
                     tvecs.append(tvec)
+                    
+                # --- Add this section to display the marker ID ---
+                    # Get the center of the marker for text placement
+                    # The corners array is structured as [marker_index][0][corner_index][x, y]
+                    center_x = int(np.mean(corners[i][0][:, 0]))
+                    center_y = int(np.mean(corners[i][0][:, 1])) - 10 # Offset y slightly above the marker
+
+                    # Define font, scale, color, and thickness
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    font_scale = 0.75
+                    font_color = (0, 255, 255) # Black
+                    font_thickness = 2
+
+                    # Convert the marker_id to a string
+                    text = f"   ID: {marker_id}"
+
+                    # Put the text on the image
+                    cv2.putText(image, text, (center_x, center_y), font, font_scale, font_color, font_thickness, cv2.LINE_AA)
+                    # --- End of marker ID display section ---
+                    
                     if marker_id == pntr_id:
                         # Process pointer's pose
                         #print(f"Pointer({pntr_id})pose:")
