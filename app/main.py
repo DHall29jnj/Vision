@@ -116,8 +116,8 @@ if __name__ == "__main__":
                         R_cam_to_pntr = rotation_matrix.T  # Inverse rotation
                         t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
                         
-                        print("Camera position in pointer's frame:", t_cam_to_pntr)
-                        print("Camera orientation in pointer's frame:", R_cam_to_pntr)
+                        # print("Camera position in pointer's frame:", t_cam_to_pntr)
+                        # print("Camera orientation in pointer's frame:", R_cam_to_pntr)
 
                     elif marker_id == ref_id:
                         # Process reference's pose
@@ -132,12 +132,11 @@ if __name__ == "__main__":
                         R_cam_to_ref = rotation_matrix.T  # Inverse rotation
                         t_cam_to_ref = -R_cam_to_ref @ tvec  # Inverse translation
                         
-                        print("Camera position in the reference frame:", t_cam_to_ref)
-                        print("Camera orientation in reference frame:", R_cam_to_ref)
+                        # print("Camera position in the reference frame:", t_cam_to_ref)
+                        # print("Camera orientation in reference frame:", R_cam_to_ref)
                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
                     
-            if rvec_ref is not None and tvec_ref is not None and \
-                rvec_pntr is not None and tvec_pntr is not None:
+            if rvec_ref is not None and tvec_ref is not None and rvec_pntr is not None and tvec_pntr is not None:
                 # 1. Convert rvec and tvec to homogeneous transformation matrices
                 R_ref, _ = cv2.Rodrigues(rvec_ref)
                 T_ref = np.eye(4)
@@ -159,9 +158,7 @@ if __name__ == "__main__":
                 R_ref_to_pntr = T_ref_to_pntr[:3, :3]
                 t_ref_to_pntr = T_ref_to_pntr[:3, 3]
 
-                # Now you have the pointer's pose relative to the reference marker
-                # You can print or visualize this information
-                # Example: print the translation
+                # You can print or visualize this information Print pointer's position (x, y, z) relative to the reference
                 print(f"Pointer relative to Reference ({ref_id} -> {pntr_id}):")
                 print("  Translation:", t_ref_to_pntr)
 
