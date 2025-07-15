@@ -71,7 +71,7 @@ if __name__ == "__main__":
             rvec_pntr, tvec_pntr = None, None
             for i in range(len(ids)):
                 marker_id = ids[i] # Access the marker ID
-                # Estimate pose for each marker
+                # Calculate the pose for each marker
                 ret, rvec, tvec = cv2.solvePnP(obj_points, corners[i], cam_matrix, dist_coeffs)
                 if ret:
                     rvecs.append(rvec)
@@ -84,16 +84,14 @@ if __name__ == "__main__":
                         rvec_pntr = rvec
                         tvec_pntr = tvec
                     
-                # --- Add this section to display the marker ID ---
-                    # Get the center of the marker for text placement
-                    # The corners array is structured as [marker_index][0][corner_index][x, y]
+                # Display the marker ID
                     center_x = int(np.mean(corners[i][0][:, 0]))
-                    center_y = int(np.mean(corners[i][0][:, 1])) - 10 # Offset y slightly above the marker
+                    center_y = int(np.mean(corners[i][0][:, 1])) - 10
 
                     # Define font, scale, color, and thickness
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     font_scale = 0.75
-                    font_color = (0, 255, 255) # Black
+                    font_color = (0, 255, 255) # Yellow
                     font_thickness = 2
 
                     # Convert the marker_id to a string
@@ -101,37 +99,22 @@ if __name__ == "__main__":
 
                     # Put the text on the image
                     cv2.putText(image, text, (center_x, center_y), font, font_scale, font_color, font_thickness, cv2.LINE_AA)
-                    # --- End of marker ID display section ---
+                    #End of marker ID display
                     
                     if marker_id == pntr_id:
-                        # Process pointer's pose
-                        #print(f"Pointer({pntr_id})pose:")
-                        #print("  Rotation:", rvec)
-                        #print("  Translation:", tvec)
-            
-                        # Assume rvec, tvec from solvePnP
                         rotation_matrix, _ = cv2.Rodrigues(rvec)
-                    
                         # Camera pose in pointer's coordinate system
                         R_cam_to_pntr = rotation_matrix.T  # Inverse rotation
                         t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
-                        
                         # print("Camera position in pointer's frame:", t_cam_to_pntr)
                         # print("Camera orientation in pointer's frame:", R_cam_to_pntr)
 
                     elif marker_id == ref_id:
                         # Process reference's pose
-                        #print(f"Reference({ref_id})pose:")
-                        #print("  Rotation:", rvec)
-                        #print("  Translation:", tvec)
-                        
-                        # Assume rvec, tvec from solvePnP
                         rotation_matrix, _ = cv2.Rodrigues(rvec)
-                    
                         # Camera pose in reference's coordinate system
                         R_cam_to_ref = rotation_matrix.T  # Inverse rotation
                         t_cam_to_ref = -R_cam_to_ref @ tvec  # Inverse translation
-                        
                         # print("Camera position in the reference frame:", t_cam_to_ref)
                         # print("Camera orientation in reference frame:", R_cam_to_ref)
                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
