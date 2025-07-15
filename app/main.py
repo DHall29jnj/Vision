@@ -47,6 +47,11 @@ if __name__ == "__main__":
         [-marker_size/2, -marker_size/2, 0]
     ], dtype=np.float32)
 
+    # Variables to store the pose of the reference and pointer markers
+    rvec_ref, tvec_ref = None, None
+    rvec_pntr, tvec_pntr = None, None
+    
+    
     while True:
         ret, image = cap.read()
         if not ret:
@@ -61,6 +66,9 @@ if __name__ == "__main__":
         if ids is not None:
             rvecs = []  # Initialize empty lists outside the loop
             tvecs = []  # Initialize empty lists outside the loop
+                # Reset pose information at the start of each frame
+            rvec_ref, tvec_ref = None, None
+            rvec_pntr, tvec_pntr = None, None
             for i in range(len(ids)):
                 marker_id = ids[i] # Access the marker ID
                 # Estimate pose for each marker
@@ -68,6 +76,13 @@ if __name__ == "__main__":
                 if ret:
                     rvecs.append(rvec)
                     tvecs.append(tvec)
+                    
+                    if marker_id == ref_id:
+                        rvec_ref = rvec
+                        tvec_ref = tvec
+                    elif marker_id == pntr_id:
+                        rvec_pntr = rvec
+                        tvec_pntr = tvec
                     
                 # --- Add this section to display the marker ID ---
                     # Get the center of the marker for text placement
@@ -120,6 +135,47 @@ if __name__ == "__main__":
                         print("Camera position in the reference frame:", t_cam_to_ref)
                         print("Camera orientation in reference frame:", R_cam_to_ref)
                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size)
+                    
+            if rvec_ref is not None and tvec_ref is not None and \
+                rvec_pntr is not None and tvec_pntr is not None:
+                # 1. Convert rvec and tvec to homogeneous transformation matrices
+                R_ref, _ = cv2.Rodrigues(rvec_ref)
+                T_ref = np.eye(4)
+                T_ref[:3, :3] = R_ref
+                T_ref[:3, 3] = tvec_ref.flatten()
+
+                R_pntr, _ = cv2.Rodrigues(rvec_pntr)
+                T_pntr = np.eye(4)
+                T_pntr[:3, :3] = R_pntr
+                T_pntr[:3, 3] = tvec_pntr.flatten()
+
+                # 2. Invert the reference transformation matrix
+                T_ref_inverse = np.linalg.inv(T_ref)
+
+                # 3. Concatenate the transformations to get pointer's pose relative to reference
+                T_ref_to_pntr = T_ref_inverse @ T_pntr
+
+                # You can extract R_ref_to_pntr and t_ref_to_pntr if needed
+                R_ref_to_pntr = T_ref_to_pntr[:3, :3]
+                t_ref_to_pntr = T_ref_to_pntr[:3, 3]
+
+                # Now you have the pointer's pose relative to the reference marker
+                # You can print or visualize this information
+                # Example: print the translation
+                print(f"Pointer relative to Reference ({ref_id} -> {pntr_id}):")
+                print("  Translation:", t_ref_to_pntr)
+
+                # Example: Display the relative translation on the image
+                rel_pose_text = f"Rel T: X={t_ref_to_pntr[0]:.2f} Y={t_ref_to_pntr[1]:.2f} Z={t_ref_to_pntr[2]:.2f}"
+                cv2.putText(image, rel_pose_text, (50, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+
+            # Draw the detected markers and their axes for visualization on the text_overlay
+            cv2.aruco.drawDetectedMarkers(image, corners, ids)
+            for i in range(len(ids)):
+                # For simplicity, using the current loop's rvec, tvec here
+                if ret: # Only draw axes if solvePnP was successful for this marker
+                    cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size * 0.5)
+            
                     
         # Display the image
         cv2.imshow("ArUco Pose", image)
