@@ -6,6 +6,7 @@ import trimesh
 import pyrender
 from pathlib import Path
 from core.config import Config
+
 if __name__ == "__main__":
     config = Config.get_instance()
     
