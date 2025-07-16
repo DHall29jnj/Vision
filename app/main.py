@@ -18,16 +18,13 @@ if __name__ == "__main__":
     marker_size = config.marker_size
     
     # Parameters
-    dictionary_id = aruco.DICT_4X4_50
     estimate_pose = True
     show_rejected = False
     camera_id = config.camera_id
     video_file = ""  # Leave blank to use webcam
 
     # Setup dictionary and detector
-    dictionary = aruco.getPredefinedDictionary(dictionary_id)
-    detector_params = aruco.DetectorParameters()
-    detector = aruco.ArucoDetector(dictionary, detector_params)
+    detector = aruco.ArucoDetector(aruco_dict, aruco_params)
     
     
     # Setup video input
