@@ -40,7 +40,8 @@ if __name__ == "__main__":
     # Load STL file
     stl_path = "C:/Users/DHall29/workspace/Vision/app/assets/1121.STL"  # Replace with your STL file path
     mesh = trimesh.load(stl_path)
-    mesh.apply_scale(0.1)
+    scale_factor = 0.1
+    mesh.apply_scale(scale_factor)
 
     # Convert Trimesh to Pyrender mesh
     tri_mesh = pyrender.Mesh.from_trimesh(mesh)
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     scene.add(light)
 
     # Renderer
-    r = pyrender.OffscreenRenderer(640, 480)
+    r = pyrender.OffscreenRenderer(1280, 960)
 
     # --- Video Capture Loop ---
     cap = cv2.VideoCapture(0)
@@ -66,6 +67,7 @@ if __name__ == "__main__":
         if not ret:
             break
 
+        frame = cv2.resize(frame, (1280, 960))
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         corners, ids, rejected = detector.detectMarkers(gray)
