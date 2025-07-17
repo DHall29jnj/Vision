@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # Setup dictionary and detector
     detector = aruco.ArucoDetector(aruco_dict, aruco_params)
 
-    # Define object points for a square planar ArUco marker (z=0)
+    # Define object points for ArUco
     obj_points = np.array([
         [-marker_size/2, marker_size/2, 0],
         [ marker_size/2,  marker_size/2, 0],
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     ], dtype=np.float32)
 
     # Load STL file
-    stl_path = "C:/Users/DHall29/workspace/Vision/app/assets/1121.STL"  # Replace with your STL file path
+    stl_path = "C:/Users/DHall29/workspace/Vision/app/assets/1121.STL"
     mesh = trimesh.load(stl_path)
     scale_factor = 0.1
     mesh.apply_scale(scale_factor)

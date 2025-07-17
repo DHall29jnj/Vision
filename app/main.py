@@ -1,7 +1,6 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-import trimesh
 from core.config import Config
 
 if __name__ == "__main__":
@@ -23,6 +22,10 @@ if __name__ == "__main__":
     camera_id = config.camera_id
     video_file = ""  # Leave blank to use webcam
 
+    # Variables to store the pose of the reference and pointer markers
+    rvec_ref, tvec_ref = None, None
+    rvec_pntr, tvec_pntr = None, None
+
     # Setup dictionary and detector
     detector = aruco.ArucoDetector(aruco_dict, aruco_params)
     
@@ -43,11 +46,6 @@ if __name__ == "__main__":
         [ marker_size/2, -marker_size/2, 0],
         [-marker_size/2, -marker_size/2, 0]
     ], dtype=np.float32)
-
-    # Variables to store the pose of the reference and pointer markers
-    rvec_ref, tvec_ref = None, None
-    rvec_pntr, tvec_pntr = None, None
-    
     
     while True:
         ret, image = cap.read()
@@ -63,6 +61,7 @@ if __name__ == "__main__":
         if ids is not None:
             rvecs = []  # Initialize empty lists outside the loop
             tvecs = []  # Initialize empty lists outside the loop
+            
                 # Reset pose information at the start of each frame
             rvec_ref, tvec_ref = None, None
             rvec_pntr, tvec_pntr = None, None
@@ -134,11 +133,11 @@ if __name__ == "__main__":
                 # 3. Concatenate the transformations to get pointer's pose relative to reference
                 T_ref_to_pntr = T_ref_inverse @ T_pntr
 
-                # You can extract R_ref_to_pntr and t_ref_to_pntr if needed
+                # Extract R_ref_to_pntr and t_ref_to_pntr
                 R_ref_to_pntr = T_ref_to_pntr[:3, :3]
                 t_ref_to_pntr = T_ref_to_pntr[:3, 3]
 
-                # You can print or visualize this information Print pointer's position (x, y, z) relative to the reference
+                # Print Relative positions
                 print(f"Pointer relative to Reference ({ref_id} -> {pntr_id}):")
                 print("  Translation:", t_ref_to_pntr)
 
@@ -149,7 +148,6 @@ if __name__ == "__main__":
             # Draw the detected markers and their axes for visualization on the text_overlay
             cv2.aruco.drawDetectedMarkers(image, corners, ids)
             for i in range(len(ids)):
-                # For simplicity, using the current loop's rvec, tvec here
                 if ret: # Only draw axes if solvePnP was successful for this marker
                     cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_size * 0.5)
             
