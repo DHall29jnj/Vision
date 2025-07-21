@@ -120,11 +120,11 @@ if __name__ == "__main__":
         tr_ref = list_tvec[0]
         tr_pntr = list_tvec[1]
         
-        # # Camera pose in pointer's coordinate system
-        # R_cam_to_pntr = rot_ref.T  # Inverse rotation
-        # t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
-        # print("Camera position in pointer's frame:", t_cam_to_pntr)
-        # print("Camera orientation in pointer's frame:", R_cam_to_pntr)
+        # Camera pose in pointer's coordinate system
+        R_cam_to_pntr = rot_ref.T  # Inverse rotation
+        t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
+        print("Camera position in pointer's frame:", t_cam_to_pntr)
+        print("Camera orientation in pointer's frame:", R_cam_to_pntr)
         
         # Build 4x4 matrix
         transf_cam_ref = np.eye(4)
@@ -140,9 +140,9 @@ if __name__ == "__main__":
         origin_ = trans_pntr_ref @ origin
         
         print(origin_)
-        # Extract the relative translation vector (x, y, z)
-        relative_tvec = trans_pntr_ref[:3, 3]
-        print("Relative translation (x, y, z) of pointer with respect to reference:", relative_tvec)
+        # # Extract the relative translation vector (x, y, z)
+        # relative_tvec = trans_pntr_ref[:3, 3]
+        # print("Relative translation (x, y, z) of pointer with respect to reference:", relative_tvec)
 
    
 
