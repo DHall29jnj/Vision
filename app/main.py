@@ -2,6 +2,7 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 from core.config import Config
+import yaml
 
 def invert_4x4_transform(T):
     """Invert a 4x4 rigid transformation matrix."""
@@ -66,6 +67,8 @@ if __name__ == "__main__":
     list_rvec = [None] * 2
     list_tvec = [None] * 2
     origin = np.array([0, 0, 0, 1])  # Shape: (4,)
+    previous_position = None
+    tracked_positions = []
     
     
     while True:
@@ -123,8 +126,8 @@ if __name__ == "__main__":
         # Camera pose in pointer's coordinate system
         R_cam_to_pntr = rot_ref.T  # Inverse rotation
         t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
-        print("Camera position in pointer's frame:", t_cam_to_pntr)
-        print("Camera orientation in pointer's frame:", R_cam_to_pntr)
+        # print("Camera position in pointer's frame:", t_cam_to_pntr)
+        # print("Camera orientation in pointer's frame:", R_cam_to_pntr)
         
         # Build 4x4 matrix
         transf_cam_ref = np.eye(4)
@@ -140,25 +143,18 @@ if __name__ == "__main__":
         origin_ = trans_pntr_ref @ origin
         
         print(origin_)
-        # # Extract the relative translation vector (x, y, z)
-        # relative_tvec = trans_pntr_ref[:3, 3]
-        # print("Relative translation (x, y, z) of pointer with respect to reference:", relative_tvec)
-
-   
-
-    #         # Print Relative positions
-    #         print(f"Pointer relative to Reference ({ref_id} -> {pntr_id}):")
-    #         print("  Translation:", t_ref_to_pntr)
-
-    #         # Example: Display the relative translation on the frame
-    #         rel_pose_text = f"Rel T: X={t_ref_to_pntr[0]:.2f} Y={t_ref_to_pntr[1]:.2f} Z={t_ref_to_pntr[2]:.2f}"
-    #         cv2.putText(frame, rel_pose_text, (50, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
-
-    #     # Draw the detected markers and their axes for visualization on the text_overlay
-    #     cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-    #     for i in range(len(ids)):
-    #         if ret: # Only draw axes if solvePnP was successful for this marker
-    #             cv2.drawFrameAxes(frame, cam_matrix, dist_coeffs, rvec, tvec, marker_size * 0.5)
+        x, y, z = origin_[:3]
+        while True:
+            x, y, z, = origin_[:3]
+            current_position = np.array([x, y, z])
+            if previous_position is None or np.any(np.abs(current_position - previous_position) >= 0.01):
+                tracked_positions.append(current_position.copy())
+                print(f"Tracked position: x={x:.3f}, y={y:.3f}, z={z:.3f}")
+                previous_position = current_position
+            else:
+                break
+              
+        print("x: ", x, "y: ", y, "z: ", z)
             
                     
         # Display the frame
@@ -167,6 +163,26 @@ if __name__ == "__main__":
         # Exit on keypress 'q'
         if cv2.waitKey(wait_time) & 0xFF == ord('q'):
             break
+        
+    # Save position log if markers are found
+    if len(origin_) > 0:
+        # Save the co-ordinates to a file
+        position_data = {
+            'x-direction': x.tolist(),
+            'y-direction': y.tolist(),   
+            'z-direction': z.tolist()
+        }
+
+        with open('position_data.yml', 'w') as f:
+            yaml.dump(position_data, f)
+
+        print("Positions tracked and saved to position_data.yml")
+        print("X-movement:\n", x)
+        print("Y-movement:\n", y)
+        print("Z-movement:\n", y)
+
+    else:
+        print("No positions were detected")
     
 
     # Release the video capture object and destroy all windows
