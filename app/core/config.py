@@ -33,7 +33,7 @@ class Config:
 
         self.dist_coeffs = dist_coeffs
 
-        self.marker_size = 0.05  # In meters 
+        self.marker_size = 5  # In centimeters 
 
         self.pntr_id = 1
         self.ref_id = 2

@@ -147,7 +147,7 @@ if __name__ == "__main__":
         while True:
             x, y, z, = origin_[:3]
             current_position = np.array([x, y, z])
-            if previous_position is None or np.any(np.abs(current_position - previous_position) >= 0.01):
+            if previous_position is None or np.any(np.abs(current_position - previous_position) >= 1):
                 tracked_positions.append(current_position.copy())
                 print(f"Tracked position: x={x:.3f}, y={y:.3f}, z={z:.3f}")
                 previous_position = current_position
@@ -165,12 +165,13 @@ if __name__ == "__main__":
             break
         
     # Save position log if markers are found
+    tracked_positions = np.array(tracked_positions)
     if len(origin_) > 0:
         # Save the co-ordinates to a file
         position_data = {
-            'x-direction': x.tolist(),
-            'y-direction': y.tolist(),   
-            'z-direction': z.tolist()
+            'x-direction': tracked_positions[:, 0].tolist(),
+            'y-direction': tracked_positions[:, 1].tolist(),   
+            'z-direction': tracked_positions[:, 2].tolist()
         }
 
         with open('position_data.yml', 'w') as f:
