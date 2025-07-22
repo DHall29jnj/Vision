@@ -4,7 +4,7 @@ import yaml
 
 # Define chessboard parameters
 chessboard_size = (9, 6) # Number of inner corners per a chessboard row and column
-square_size = 0.02 # Size of each square in meters (adjust to your board)
+square_size = 2.5 # Size of each square in centimeters (adjust to your board)
 
 # Prepare object points (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
 objp = np.zeros((chessboard_size[0] * chessboard_size[1], 3), np.float32)
@@ -15,7 +15,7 @@ objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane
 
 # Capture video from webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 # Loop to capture images for calibration
 print("Press 'c' to capture a calibration image. Press 'q' to quit.")
