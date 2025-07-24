@@ -4,6 +4,12 @@ import numpy as np
 from core.config import Config
 import yaml
 
+def get_transformation_matrix(R, t):
+    T = np.eye(4)
+    T[:3, :3] = R
+    T[:3, 3] = t.flatten()
+    return T
+
 def invert_4x4_transform(T):
     """Invert a 4x4 rigid transformation matrix."""
     R = T[:3, :3]
@@ -124,20 +130,19 @@ if __name__ == "__main__":
         tr_pntr = list_tvec[1]
         
         # Camera pose in pointer's coordinate system
-        R_cam_to_pntr = rot_ref.T  # Inverse rotation
-        t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
+        # R_cam_to_pntr = rot_ref.T  # Inverse rotation
+        # t_cam_to_pntr = -R_cam_to_pntr @ tvec  # Inverse translation
         # print("Camera position in pointer's frame:", t_cam_to_pntr)
         # print("Camera orientation in pointer's frame:", R_cam_to_pntr)
         
         # Build 4x4 matrix
-        transf_cam_ref = np.eye(4)
-        transf_cam_ref[:3, :3] = rot_ref
-        transf_cam_ref[:3, 3] = tr_ref.flatten()
+        transf_cam_ref = get_transformation_matrix(rot_ref, tr_ref)
+        transf_cam_pntr = get_transformation_matrix(rot_pntr, tr_pntr)
         
         # Build 4x4 matrix
-        transf_cam_pntr = np.eye(4)
-        transf_cam_pntr[:3, :3] = rot_pntr
-        transf_cam_pntr[:3, 3] = tr_pntr.flatten()
+        # transf_cam_pntr = np.eye(4)
+        # transf_cam_pntr[:3, :3] = rot_pntr
+        # transf_cam_pntr[:3, 3] = tr_pntr.flatten()
         
         trans_pntr_ref = transf_cam_ref * invert_4x4_transform(transf_cam_pntr)
         origin_ = trans_pntr_ref @ origin
