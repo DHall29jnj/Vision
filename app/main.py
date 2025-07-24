@@ -143,8 +143,12 @@ if __name__ == "__main__":
         # transf_cam_pntr = np.eye(4)
         # transf_cam_pntr[:3, :3] = rot_pntr
         # transf_cam_pntr[:3, 3] = tr_pntr.flatten()
+
+        # Using @ for matrix multiplication instead of * to properly transform 4x4 matrices
+        # This operation calculates the transformation from the camera reference frame to the pointer frame
+        # by multiplying the reference transformation with the inverted pointer transformation
         
-        trans_pntr_ref = transf_cam_ref * invert_4x4_transform(transf_cam_pntr)
+        trans_pntr_ref = transf_cam_ref @ invert_4x4_transform(transf_cam_pntr)
         origin_ = trans_pntr_ref @ origin
         
         print(origin_)
