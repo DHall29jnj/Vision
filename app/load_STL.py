@@ -38,7 +38,7 @@ if __name__ == "__main__":
     ], dtype=np.float32)
 
     # Load STL file
-    stl_path = "C:/Users/DHall29/workspace/Vision/app/assets/1121.STL"
+    stl_path = "C:/Users/DHall29/workspace/Vision/app/assets/STLs/1121.STL"
     mesh = trimesh.load(stl_path)
     scale_factor = 0.1
     mesh.apply_scale(scale_factor)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     r = pyrender.OffscreenRenderer(1280, 960)
 
     # --- Video Capture Loop ---
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     while True:
         ret, frame = cap.read()

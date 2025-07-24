@@ -105,7 +105,6 @@ if len(objpoints) > 0:
     print("Calibration parameters saved to calibration_params.yml")
     print("Camera matrix:\n", mtx)
     print("Distortion coefficients:\n", dist)
-    
     # Calculate reprojection error
     mean_error = 0
     for i in range(len(objpoints)):
