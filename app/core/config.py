@@ -26,7 +26,7 @@ except yaml.YAMLError as e:
 class Config:
     def __init__(self):
 
-        self.aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)        
+        self.aruco_dict = aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)        
         self.aruco_params = aruco.DetectorParameters()
 
         self.cam_matrix = cam_matrix
