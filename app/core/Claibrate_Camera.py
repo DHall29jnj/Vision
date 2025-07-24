@@ -105,6 +105,22 @@ if len(objpoints) > 0:
     print("Calibration parameters saved to calibration_params.yml")
     print("Camera matrix:\n", mtx)
     print("Distortion coefficients:\n", dist)
+    
+    # Calculate reprojection error
+    mean_error = 0
+    for i in range(len(objpoints)):
+        imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i],
+                                         mtx, dist)
+        error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2) / len(imgpoints2)
+        mean_error += error
+    mean_error /= len(objpoints)
+    
+    print("\nCalibration results:")
+    print(f"Camera matrix:\n{mtx}")
+    print(f"Distortion coefficients: {dist.ravel()}")
+    print(f"Mean reprojection error: {mean_error:.3f} pixels")
+    
+    
 
 else:
     print("No images captured for calibration. Please capture images with the chessboard pattern.")
