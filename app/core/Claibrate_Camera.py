@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import yaml
+import os 
+import shutil
 
 # Define chessboard parameters
 chessboard_size = (9, 6) # Number of inner corners per a chessboard row and column
@@ -19,6 +21,43 @@ cap = cv2.VideoCapture(1)
 
 # Loop to capture images for calibration
 print("Press 'c' to capture a calibration image. Press 'q' to quit.")
+
+# Define the folder to save images
+output_folder = "app/assets/images"  
+good_images = "app/assets/good_images"
+
+# --- Clear existing folders at the start of each run ---
+if os.path.exists(output_folder):
+    print(f"Clearing existing folder: {output_folder}")
+    shutil.rmtree(output_folder) # Delete the output folder and its contents recursively
+    print("Folder cleared.")
+    
+# --- Clear existing folders at the start of each run ---
+if os.path.exists(good_images):
+    print(f"Clearing existing folder: {good_images}")
+    shutil.rmtree(good_images) # Delete the output folder and its contents recursively
+    print("Folder cleared.")
+
+# Create the folder if it doesn't exist
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+    print(f"Created folder: {output_folder}")
+    
+if not os.path.exists(good_images):
+    os.makedirs(good_images)
+    print(f"Created folder: {good_images}")
+
+image_count = 0  # To create unique filenames for each captured image
+
+# Blur detection threshold
+BLUR_THRESHOLD = 1  # 
+
+# Function to detect blur using Laplacian variance
+def is_blurry(image, threshold=BLUR_THRESHOLD):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+    laplacian_variance = cv2.Laplacian(gray, cv2.CV_64F).var()  # Calculate Laplacian variance
+    return laplacian_variance < threshold, laplacian_variance
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -43,7 +82,20 @@ while True:
 
     key = cv2.waitKey(0)
     if key & 0xFF == ord('c') and ret_corners: # Capture if 'c' is pressed and corners are found
-        print("Image captured!")
+        is_blurry_image, variance = is_blurry(frame)
+        if not is_blurry_image:  # Only save if not blurry
+            file_name = f"captured_image{image_count:04d}.jpg"  # Add counter for more uniqueness
+            save_path = os.path.join(good_images, file_name)  # Save to "good_images" folder
+
+            # Save the image to the specified path
+            cv2.imwrite(save_path, frame)  # Pass the 'frame' directly
+            print(f"Image captured and saved to {save_path} (Variance: {variance:.2f})")
+            image_count += 1
+        else:
+            print(f"Image captured but discarded due to blur (Variance: {variance:.2f})")
+
+
+        
     elif key & 0xFF == ord('q'): # Quit if 'q' is pressed
         break
 
